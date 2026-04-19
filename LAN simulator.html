@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LAN Simulator</title>
+
+<style>
+body{
+  font-family:Arial;
+  text-align:center;
+  background:#121212;
+  color:white;
+}
+
+h2{margin-top:10px;}
+
+.connector{
+  display:inline-block;
+  padding:10px;
+  margin:10px;
+  border:2px solid #444;
+  border-radius:10px;
+}
+
+.slot{
+  width:35px;
+  height:50px;
+  display:inline-block;
+  margin:3px;
+  background:#222;
+  border-radius:5px;
+  border:2px solid #333;
+}
+
+.palette{
+  margin-top:20px;
+}
+
+.color{
+  width:35px;
+  height:35px;
+  display:inline-block;
+  margin:5px;
+  border-radius:5px;
+  border:2px solid #333;
+}
+
+.selected{
+  border:5px solid rgb(255, 255, 2) !important;
+}
+
+button{
+  margin:10px;
+  padding:8px 15px;
+  border : none ;
+  border-radius:6px;
+  background:#ffffff;
+  color:rgb(0, 0, 0);
+}
+
+.result{
+  font-size:18px;
+  margin-top:10px;
+}
+</style>
+</head>
+
+<body>
+
+<h2>LAN Cable Simulator</h2>
+
+<button class="tab" data-mode="straight" id="straightTab">Straight-Through</button>
+<button onclick="setMode('crossover')">Crossover</button>
+
+<div>
+  <div class="connector">
+    <p>Connector 1</p>
+    <div id="conn1"></div>
+  </div>
+
+  <div class="connector">
+    <p>Connector 2</p>
+    <div id="conn2"></div>
+  </div>
+</div>
+
+<p>Select Color → Tap Slot</p>
+
+<div class="palette" id="palette"></div>
+
+<br>
+<button onclick="check()">Test Connection</button>
+<div class="result" id="result"></div>
+
+<script>
+
+// warna (index)
+let colors = [
+ "#ffc4b0", // WO
+ "#ff5500", // O
+ "#a9ffb0", // WG
+ "#5500ff", // B
+ "#d0c1ff", // WB
+ "#0df90c", // G
+ "#eee2d7", // WBr
+ "#8b6e45"  // Br
+];
+
+let selected = null;
+
+// isi slot
+let conn1 = Array(8).fill(null);
+let conn2 = Array(8).fill(null);
+
+// standar
+let straight = [0,1,2,3,4,5,6,7];
+let crossover = [2,5,0,3,4,1,6,7];
+
+let mode = "straight";
+
+function setMode(m){
+  mode = m;
+  reset();
+}
+
+// render palette
+function renderPalette(){
+  let html="";
+  colors.forEach((c,i)=>{
+    html += `<div class="color ${selected===i?'selected':''}" 
+              style="background:${c}"
+              onclick="selectColor(${i})"></div>`;
+  });
+  document.getElementById("palette").innerHTML = html;
+}
+
+// render connector
+function render(){
+  let c1="", c2="";
+
+  conn1.forEach((c,i)=>{
+    let bg = c!=null ? colors[c] : "#222";
+    c1 += `<div class="slot" style="background:${bg}" onclick="place(1,${i})"></div>`;
+  });
+
+  conn2.forEach((c,i)=>{
+    let bg = c!=null ? colors[c] : "#222";
+    c2 += `<div class="slot" style="background:${bg}" onclick="place(2,${i})"></div>`;
+  });
+
+  document.getElementById("conn1").innerHTML = c1;
+  document.getElementById("conn2").innerHTML = c2;
+}
+
+// pilih warna
+function selectColor(i){
+  selected = i;
+  renderPalette();
+}
+
+// pasang
+function place(conn, index){
+  if(selected===null) return;
+
+  if(conn===1){
+    conn1[index] = selected;
+  } else {
+    conn2[index] = selected;
+  }
+
+  render();
+}
+
+// cek koneksi
+function check(){
+  let ok = true;
+
+  if(mode=="straight"){
+    for(let i=0;i<8;i++){
+      if(conn1[i] !== conn2[i]) ok=false;
+    }
+  }
+
+  if(mode=="crossover"){
+    for(let i=0;i<8;i++){
+      if(conn2[i] !== conn1[crossover[i]]) ok=false;
+    }
+  }
+
+  document.getElementById("result").innerHTML =
+    ok ? "Connected ✅" : "No Signal ❌";
+}
+
+// reset
+function reset(){
+  conn1 = Array(8).fill(null);
+  conn2 = Array(8).fill(null);
+  document.getElementById("result").innerHTML="";
+  render();
+}
+
+renderPalette();
+render();
+
+</script>
+
+</body>
+</html>
